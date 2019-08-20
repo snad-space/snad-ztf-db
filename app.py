@@ -129,13 +129,13 @@ async def help(request) -> Response:
                     <li>
                         <font face='monospace'>filter</font>
                         &mdash;
-                        pathband to search.
+                        passband to search.
                         Optional, multiple values accepted. If not specified then all filters are used
                     </li>
                     <li>
                         <font face='monospace'>not_filter</font>
                         &mdash;
-                        excluded pathband from search. 
+                        excluded passband from search. 
                         Optional, multiple values accepted
                     </li>
                     <li>
