@@ -123,7 +123,7 @@ async def help(request) -> Response:
                     <li>
                         <font face='monospace'>radius_arcsec</font>
                         &mdash;
-                        circle radius, acrseconds. Should be positive and less that {MAX_RADIUS}.
+                        circle radius, acrseconds. Should be positive and less than {MAX_RADIUS}.
                         Mandatory
                     </li>
                     <li>
@@ -145,9 +145,9 @@ async def help(request) -> Response:
                         Optional, multiple values accepted. If not specified then all field ids are used
                     </li>
                     <li>
-                        <font face='monospace'>not_filter</font>
+                        <font face='monospace'>not_fieldid</font>
                         &mdash;
-                        excluded field ids from search. 
+                        excluded field ids from search.
                         Optional, multiple values accepted
                     </li>
                 </ul>
