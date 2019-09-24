@@ -104,6 +104,7 @@ async def help(request) -> Response:
                         Mandatory, multiple values accepted
                     </li>
                 </ul>
+                <p>Example: <font face='monospace'><a href="/api/v1/oid/full/json?oid=830202400008402">/api/v1/oid/full/json?oid=830202400008402</a></font></p>
             <h2><font face='monospace'>/api/v1/circle/full/json</font></h2>
                 <p>Find objects in circle and return json with the whole data</p>
                 <p>Query parameters:</p>
@@ -151,6 +152,7 @@ async def help(request) -> Response:
                         Optional, multiple values accepted
                     </li>
                 </ul>
+                <p>Example: <font face='monospace'><a href="/api/v1/circle/full/json?ra=10&dec=30&radius_arcsec=10">/api/v1/circle/full/json?ra=10&dec=30&radius_arcsec=10</a></font>
         ''',
         content_type='text/html',
     )
