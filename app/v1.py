@@ -6,15 +6,11 @@ from dataclasses import dataclass
 from functools import partial
 from typing import Optional, Dict, List, Any
 
-from aiohttp.web import Response, json_response, RouteTableDef, Request
+from aiohttp.web import Response, json_response, RouteTableDef, Request, HTTPBadRequest
 from asyncpg import create_pool, Connection, BitString
 
 
 MAX_RADIUS = 60
-
-
-class RequestError(ValueError):
-    pass
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -204,18 +200,18 @@ async def circle_oids(request: Request) -> list[int]:
         dec = float(request.query['dec'])
         radius = float(request.query['radius_arcsec'])
     except KeyError:
-        raise RequestError('All of "ra", "dec" and "radius_arcsec" fields should be specified')
+        raise HTTPBadRequest(reason='All of "ra", "dec" and "radius_arcsec" fields should be specified')
     except ValueError:
-        raise RequestError('All or "ra", "dec" and "radius_arcsec" fields should be floats')
+        raise HTTPBadRequest(reason='All or "ra", "dec" and "radius_arcsec" fields should be floats')
     if radius <= 0 or radius > MAX_RADIUS:
-        raise RequestError('"radius" should be positive and less than 60')
+        raise HTTPBadRequest(reason='"radius" should be positive and less than 60')
     filters = request.query.getall('filter', [])
     not_filters = request.query.getall('not_filter', [])
     try:
         fieldids = [int(x) for x in request.query.getall('fieldid', [])]
         not_fieldids = [int(x) for x in request.query.getall('not_fieldid', [])]
     except ValueError:
-        raise RequestError('All "fieldid" and "not_fieldid" values should be int')
+        raise HTTPBadRequest(reason='All "fieldid" and "not_fieldid" values should be int')
     circle = SCircle(point=SPoint(ra=ra, dec=dec), radius=radius)
 
     where = [
