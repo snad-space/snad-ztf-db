@@ -205,7 +205,7 @@ async def oid_full_json(request: Request) -> Response:
             oid = int(oid)
         except ValueError:
             return Response(text=f'oid value "{oid}" cannot be converted to int', status=404)
-        async with request.app['pool'].acquire() as con:  # type: Connection
+        async with request.app['pg_pool'].acquire() as con:  # type: Connection
             meta = await get_meta_for_oid(con, oid)
             if meta is None:
                 continue
@@ -251,7 +251,7 @@ async def circle_oids(request: Request) -> list[int]:
             values.append(value)
     where = ' AND '.join(where_parts)
     
-    async with request.app['pool'].acquire() as con:  # type: Connection
+    async with request.app['pg_pool'].acquire() as con:  # type: Connection
         oids = await con.fetch(
             f'''
                 SELECT oid
@@ -271,7 +271,7 @@ async def circle_oids(request: Request) -> list[int]:
 async def circle_full_json(request: Request) -> Response:
     oids = await circle_oids(request)
     data = {}
-    async with request.app['pool'].acquire() as con:  # type: Connection
+    async with request.app['pg_pool'].acquire() as con:  # type: Connection
         for oid in oids:
             meta = await get_meta_for_oid(con, oid)
             assert meta is not None
@@ -300,8 +300,5 @@ async def connection_setup(con: Connection):
     )
 
 
-async def get_app():
-    app = Application()
-    app['pool'] = await create_pool(database='ztf', user='api', setup=connection_setup)
-    app.add_routes(routes)
-    return app
+async def configure_app(app):
+    app['pg_pool'] = await create_pool(database='ztf', user='api', setup=connection_setup)

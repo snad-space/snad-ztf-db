@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  app:
+    build: .
+    networks:
+      - proxy
+    environment:
+       VIRTUAL_HOST: db-dev.ztf.snad.space
+       HTTPS_METHOD: noredirect
+       DYNDNS_HOST: db-dev.ztf.snad.space
+       LETSENCRYPT_HOST: db-dev.ztf.snad.space
+       LETSENCRYPT_EMAIL: db-dev.ztf.snad.space@homb.it
+    volumes:
+      - /var/run/postgresql:/var/run/postgresql
+    restart: always
+
+networks:
+  proxy:
+    external:
+      name: proxy
