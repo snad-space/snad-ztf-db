@@ -13,6 +13,22 @@ from asyncpg import create_pool, Connection, BitString
 MAX_RADIUS = 60
 
 
+class RequestError(ValueError):
+    pass
+
+
+class JSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, BitString):
+            return obj.to_int()
+        if isinstance(obj, SPoint):
+            return obj.to_dict()
+        return super().default(obj)
+
+
+json_response = partial(json_response, dumps=partial(json.dumps, cls=JSONEncoder))
+
+
 @dataclass
 class SPoint:
     ra: float
@@ -58,15 +74,6 @@ class SCircle:
         point = SPoint.from_sql(point)
         radius = m.degrees(float(radius)) * 3600.
         return SCircle(point=point, radius=radius)
-
-
-class JSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, BitString):
-            return obj.to_int()
-        if isinstance(obj, SPoint):
-            return obj.to_dict()
-        return super().default(obj)
 
 
 routes = RouteTableDef()
@@ -204,28 +211,27 @@ async def oid_full_json(request: Request) -> Response:
                 continue
             lc = await get_lc_for_oid(con, oid)
             data[oid] = dict(meta=meta, lc=lc)
-    return json_response(data, dumps=partial(json.dumps, cls=JSONEncoder))
+    return json_response(data)
 
 
-@routes.get('/api/v1/circle/full/json')
-async def circle_full_json(request: Request) -> Response:
+async def circle_oids(request: Request) -> list[int]:
     try:
         ra = float(request.query['ra'])
         dec = float(request.query['dec'])
         radius = float(request.query['radius_arcsec'])
     except KeyError:
-        return Response(text='All of "ra", "dec" and "radius_arcsec" fields should be specified', status=404)
+        raise RequestError('All of "ra", "dec" and "radius_arcsec" fields should be specified')
     except ValueError:
-        return Response(text='All or "ra", "dec" and "radius_arcsec" fields should be floats', status=404)
+        raise RequestError('All or "ra", "dec" and "radius_arcsec" fields should be floats')
     if radius <= 0 or radius > MAX_RADIUS:
-        return Response(text='"radius" should be positive and less than 60')
+        raise RequestError('"radius" should be positive and less than 60')
     filters = request.query.getall('filter', [])
     not_filters = request.query.getall('not_filter', [])
     try:
         fieldids = [int(x) for x in request.query.getall('fieldid', [])]
         not_fieldids = [int(x) for x in request.query.getall('not_fieldid', [])]
     except ValueError:
-        return Response(text='All "fieldid" and "not_fieldid" values should be int', status=404)
+        raise RequestError('All "fieldid" and "not_fieldid" values should be int')
     circle = SCircle(point=SPoint(ra=ra, dec=dec), radius=radius)
 
     where = [
@@ -244,8 +250,7 @@ async def circle_full_json(request: Request) -> Response:
             where_parts.append(part.format(i=i))
             values.append(value)
     where = ' AND '.join(where_parts)
-
-    data = {}
+    
     async with request.app['pool'].acquire() as con:  # type: Connection
         oids = await con.fetch(
             f'''
@@ -257,13 +262,27 @@ async def circle_full_json(request: Request) -> Response:
             *values
         )
         if oids is None:
-            return json_response(data)
-        for oid in (int(record[0]) for record in oids):
+            oids = []
+        oids = [int(record[0]) for record in oids]
+    return oids
+
+
+@routes.get('/api/v1/circle/full/json')
+async def circle_full_json(request: Request) -> Response:
+    oids = await circle_oids(request)
+    data = {}
+    async with request.app['pool'].acquire() as con:  # type: Connection
+        for oid in oids:
             meta = await get_meta_for_oid(con, oid)
             assert meta is not None
             lc = await get_lc_for_oid(con, oid)
             data[oid] = dict(meta=meta, lc=lc)
-    return json_response(data, dumps=partial(json.dumps, cls=JSONEncoder))
+    return json_response(data)
+
+
+@routes.get('/api/v1/circle/oid/json')
+async def circe_oid_json(request: Request) -> Response:
+    return json_response(circle_oids(request))
 
 
 async def connection_setup(con: Connection):
