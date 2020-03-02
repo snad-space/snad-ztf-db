@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from functools import partial
 from typing import Optional, Dict, List, Any
 
-from aiohttp.web import Response, json_response, RouteTableDef, Request, HTTPBadRequest
+from aiohttp.web import Application, Response, json_response, RouteTableDef, Request, HTTPBadRequest
 from asyncpg import create_pool, Connection, BitString
 
 
@@ -280,5 +280,9 @@ async def connection_setup(con: Connection):
     )
 
 
-async def configure_app(app):
+async def app_on_startup(app: Application):
     app['pg_pool'] = await create_pool(database='ztf', user='api', setup=connection_setup)
+
+
+async def app_on_cleanup(app: Application):
+    await app['pg_pool'].close()
