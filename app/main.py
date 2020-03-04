@@ -1,6 +1,7 @@
 """Access ZTF DRs, API v1 goes to Postgres, API v2 goes to ClickHouse
 
-Specify environment variable $API_VERSION to 'v1', 'v2', 'all', or 'v1:v2'
+Specify environment variable $API_VERSION to 'v1', 'v2', 'all', or 'v1:v2'.
+If no variable is presented, all versions will be used
 """
 from aiohttp.web import Application
 
