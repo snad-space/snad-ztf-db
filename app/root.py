@@ -20,12 +20,12 @@ _template = '''
 _help_links = dict(
     v2='''
         <p>
-            API v2 provides access to ZTF DR2, see details on <a href="/api/v2/help">/api/v2/help</a>.
+            Beta version of API v2 provides access to ZTF DR2, see details on <a href="/api/v2/help">/api/v2/help</a>.
         </p>
     ''',
     v1='''
         <p>
-            Legacy API v1 provides access to ZTF DR1, see details on <a href="/api/v1/help">/api/v1/help</a>.
+            API v1 provides access to ZTF DR1, see details on <a href="/api/v1/help">/api/v1/help</a>.
         </p> 
     ''',
 )
