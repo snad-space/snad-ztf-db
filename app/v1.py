@@ -9,6 +9,8 @@ from typing import Optional, Dict, List, Any
 from aiohttp.web import Application, Response, json_response, RouteTableDef, Request, HTTPBadRequest
 from asyncpg import create_pool, Connection, BitString
 
+from .util import oids_from_request, ra_dec_radius_from_request
+
 
 MAX_RADIUS = 60
 
@@ -76,7 +78,7 @@ routes = RouteTableDef()
 
 
 @routes.get('/api/v1/help')
-async def help(request) -> Response:
+async def api_help(request) -> Response:
     return Response(
         text=f'''
             <h1>Available resources</h1>
@@ -176,15 +178,9 @@ async def get_lc_for_oid(con: Connection, oid: int, remove_oid: bool = True) -> 
 
 @routes.get('/api/v1/oid/full/json')
 async def oid_full_json(request: Request) -> Response:
-    oids = request.query.getall('oid', None)
-    if oids is None:
-        return Response(text='Query string should has at least one "oid" field', status=404)
+    oids = oids_from_request(request)
     data = {}
     for oid in oids:
-        try:
-            oid = int(oid)
-        except ValueError:
-            return Response(text=f'oid value "{oid}" cannot be converted to int', status=404)
         async with request.app['pg_pool'].acquire() as con:  # type: Connection
             meta = await get_meta_for_oid(con, oid)
             if meta is None:
@@ -194,17 +190,8 @@ async def oid_full_json(request: Request) -> Response:
     return json_response(data)
 
 
-async def circle_oids(request: Request) -> list[int]:
-    try:
-        ra = float(request.query['ra'])
-        dec = float(request.query['dec'])
-        radius = float(request.query['radius_arcsec'])
-    except KeyError:
-        raise HTTPBadRequest(reason='All of "ra", "dec" and "radius_arcsec" fields should be specified')
-    except ValueError:
-        raise HTTPBadRequest(reason='All or "ra", "dec" and "radius_arcsec" fields should be floats')
-    if radius <= 0 or radius > MAX_RADIUS:
-        raise HTTPBadRequest(reason='"radius" should be positive and less than 60')
+async def circle_oids(request: Request) -> [int]:
+    ra, dec, radius = ra_dec_radius_from_request(request, MAX_RADIUS)
     filters = request.query.getall('filter', [])
     not_filters = request.query.getall('not_filter', [])
     try:

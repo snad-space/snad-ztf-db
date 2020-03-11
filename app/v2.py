@@ -1,9 +1,10 @@
-from typing import Optional
+from typing import Iterable
 
-from aiochclient import ChClient, Record
+from aiochclient import ChClient
 from aiohttp import ClientSession
-from aiohttp.web import Application, Response, json_response, RouteTableDef, Request
+from aiohttp.web import Application, Response, json_response, RouteTableDef, Request, HTTPInternalServerError
 
+from .util import oids_from_request, ra_dec_radius_from_request
 
 MAX_RADIUS = 60
 
@@ -17,52 +18,72 @@ LC_FIELDS = {'mjd', 'mag', 'magerr', 'clrcoeff', 'catflags'}
 routes = RouteTableDef()
 
 
-def records_to_dict(records: [Record]) -> dict:
-    if len(records) == 0:
-        return {}
-    first = records[0]
-    meta = dict(
-        nobs=first['nobs'],
-        ngoodobs=len(records),
-        filter=FILTERS[first['filter']],
-        fieldid=first['fieldid'],
-        rcid=first['rcid'],
-        coord=dict(ra=first['ra'], dec=first['dec']),
+@routes.get('/api/v2/help')
+async def api_help(request) -> Response:
+    return Response(
+        text=f'''
+            <h1>Available resources</h1>
+            <h2><font face='monospace'>/api/v2/oid/full/json</font></h2>
+                <p>Get json with the whole objects data by their identifiers</p>
+                <p>Query parameters:</p>
+                <ul>
+                    <li>
+                        <font face='monospace'>oid</font>
+                        &mdash;
+                        object identifier (OID).
+                        Mandatory, multiple values accepted
+                    </li>
+                </ul>
+                <p>Example: <font face='monospace'><a href="/api/v2/oid/full/json?oid=830202400008402">/api/v2/oid/full/json?oid=830202400008402</a></font></p>
+            <h2><font face='monospace'>/api/v1/circle/full/json</font></h2>
+                <p>Find objects in circle and return json with the whole data</p>
+                <p>Query parameters:</p>
+                <ul>
+                    <li>
+                        <font face='monospace'>ra</font>
+                        &mdash;
+                        right ascension of the circle center, degrees.
+                        Mandatory
+                    </li>
+                    <li>
+                        <font face='monospace'>dec</font>
+                        &mdash;
+                        declination of the circle center, degrees.
+                        Mandatory
+                    </li>
+                    <li>
+                        <font face='monospace'>radius_arcsec</font>
+                        &mdash;
+                        circle radius, acrseconds. Should be positive and less than {MAX_RADIUS}.
+                        Mandatory
+                    </li>
+                </ul>
+                <p>Example: <font face='monospace'><a href="/api/v2/circle/full/json?ra=10&dec=30&radius_arcsec=10">/api/v2/circle/full/json?ra=10&dec=30&radius_arcsec=10</a></font>
+        ''',
+        content_type='text/html',
     )
-    lc = [dict(
-        mjd=record['mjd'],
-        mag=record['mag'],
-        magerr=record['magerr'],
-        clrcoeff=record['clrcoeff'],
-        catflags=record['catflags'],
-    ) for record in records]
-    return dict(meta=meta, lc=lc)
 
 
-async def get_by_oid(client: ChClient, oid: int) -> dict:
-    records = await client.fetch(f"""
-        WITH
-        (
-            SELECT h3index10
-            FROM dr2_meta
-            WHERE oid = {oid:d}
-        ) AS h3
-        SELECT *
-        FROM dr2
-        WHERE h3index10 = h3 AND oid = {oid:d} AND catflags = 0
-        ORDER BY mjd
-    """)
-    return records_to_dict(records)
-
-
-async def get_meta_for_oids(client: ChClient, oids: [str]) -> [dict]:
-    oids_array = '(' + ', '.join(oids) + ')'
+async def get_meta_for_oids(client: ChClient, oids: Iterable[int]) -> [dict]:
+    oids_array = '(' + ', '.join(map(str, oids)) + ')'
     records = await client.fetch(f"""
         SELECT *
         FROM dr2_meta
         WHERE oid IN {oids_array}
     """)
     return [dict(r) for r in records]
+
+
+def prepare_meta(meta: dict) -> dict:
+    return dict(
+        nobs=meta['nobs'],
+        ngoodobs=meta['ngoodobs'],
+        filter=FILTERS[meta['filter']],
+        fieldid=meta['fieldid'],
+        rcid=meta['rcid'],
+        coord=dict(ra=meta['ra'], dec=meta['dec']),
+        h3={10: meta['h3index10']},
+    )
 
 
 async def get_lc_for_oid_h3index10(client: ChClient, oid: int, h3index10: int) -> [dict]:
@@ -77,14 +98,7 @@ async def get_lc_for_oid_h3index10(client: ChClient, oid: int, h3index10: int) -
 
 @routes.get('/api/v2/oid/full/json')
 async def oid_full_json(request: Request) -> Response:
-    oids = request.query.getall('oid', None)
-    if oids is None:
-        return Response(text='Query string should has at least one "oid" field', status=404)
-    for oid in oids:
-        try:
-            oid = int(oid)
-        except ValueError:
-            return Response(text=f'oid value "{oid}" cannot be converted to int', status=404)
+    oids = oids_from_request(request)
     metas = await get_meta_for_oids(request.app['ch_client'], oids)
     data = {}
     for meta in metas:
@@ -92,17 +106,40 @@ async def oid_full_json(request: Request) -> Response:
         h3index10 = meta['h3index10']
         lc = await get_lc_for_oid_h3index10(request.app['ch_client'], oid, h3index10)
         data[oid] = dict(
-            meta=dict(
-                nobs=meta['nobs'],
-                ngoodobs=meta['ngoodobs'],
-                filter=FILTERS[meta['filter']],
-                fieldid=meta['fieldid'],
-                rcid=meta['rcid'],
-                coord=dict(ra=meta['ra'], dec=meta['dec']),
-                h3={10: h3index10},
-            ),
+            meta=prepare_meta(meta),
             lc=[{k: v for k, v in obs.items() if k in LC_FIELDS} for obs in lc],
         )
+    return json_response(data)
+
+
+async def get_lcs_in_circle(client: ChClient, ra: float, dec: float, radius_arcsec: float) -> [dict]:
+    radius_deg = radius_arcsec / 3600.0
+    records = await client.fetch(f"""
+        SELECT *
+        FROM dr2
+        WHERE h3index10 IN
+        (
+            SELECT arrayJoin(h3kRing(geoToH3({ra:f}, {dec:f}, 10), toUInt8({radius_deg:f} / h3EdgeAngle(10)) + 1))
+        ) AND greatCircleAngle({ra:f}, {dec:f}, ra, dec) < {radius_deg:f}
+        ORDER BY (oid, mjd)
+    """)
+    return [dict(r) for r in records]
+
+
+@routes.get('/api/v2/circle/full/json')
+async def circle_full_json(request: Request) -> Response:
+    ra, dec, radius = ra_dec_radius_from_request(request, MAX_RADIUS)
+    lcs = await get_lcs_in_circle(request.app['ch_client'], ra, dec, radius)
+    oids = set(obs['oid'] for obs in lcs)
+    metas = await get_meta_for_oids(request.app['ch_client'], oids)
+    metas = {meta['oid']: meta for meta in metas}
+    if oids != set(metas):
+        raise HTTPInternalServerError(reason='dr2 and dr2_meta return different oids')
+    data = {}
+    for obs in lcs:
+        obj = data.setdefault(obs['oid'], dict(meta=prepare_meta(metas[obs['oid']])))
+        lc = obj.setdefault('lc', [])
+        lc.append({k: v for k, v in obs.items() if k in LC_FIELDS})
     return json_response(data)
 
 
