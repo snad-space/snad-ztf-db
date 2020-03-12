@@ -78,6 +78,7 @@ def prepare_meta(meta: dict) -> dict:
     return dict(
         nobs=meta['nobs'],
         ngoodobs=meta['ngoodobs'],
+        duration=meta['durgood'],
         filter=FILTERS[meta['filter']],
         fieldid=meta['fieldid'],
         rcid=meta['rcid'],
