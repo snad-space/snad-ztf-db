@@ -35,7 +35,7 @@ async def api_help(request) -> Response:
                     </li>
                 </ul>
                 <p>Example: <font face='monospace'><a href="/api/v2/oid/full/json?oid=830202400008402">/api/v2/oid/full/json?oid=830202400008402</a></font></p>
-            <h2><font face='monospace'>/api/v1/circle/full/json</font></h2>
+            <h2><font face='monospace'>/api/v2/circle/full/json</font></h2>
                 <p>Find objects in circle and return json with the whole data</p>
                 <p>Query parameters:</p>
                 <ul>
