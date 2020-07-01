@@ -1,7 +1,7 @@
 from os import environ
 
 
-AVAILABLE_API_VERSIONS = {'v1', 'v2'}
+AVAILABLE_API_VERSIONS = {'v1', 'v2', 'v3'}
 
 
 def get_api_versions() -> set:

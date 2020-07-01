@@ -7,7 +7,7 @@ routes = RouteTableDef()
 
 _template = '''
 <p>
-    Welcome on <a href="//snad.space">SNAD</a> <a href="https://www.ztf.caltech.edu/page/dr2">ZTF DR2</a>
+    Welcome on <a href="//snad.space">SNAD</a> <a href="https://www.ztf.caltech.edu">ZTF</a> data releases
     light curves page.
 </p>
 {help}
@@ -18,9 +18,15 @@ _template = '''
 
 
 _help_links = dict(
+    v3='''
+        <p>
+            Beta version of API v3 provides access to ZTF DR2 & DR3, see details on
+            <a href="/api/v3/help">/api/v3/help</a>.
+        </p>
+    ''',
     v2='''
         <p>
-            Beta version of API v2 provides access to ZTF DR2, see details on <a href="/api/v2/help">/api/v2/help</a>.
+            API v2 provides access to ZTF DR2, see details on <a href="/api/v2/help">/api/v2/help</a>.
         </p>
     ''',
     v1='''

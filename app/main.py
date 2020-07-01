@@ -28,4 +28,10 @@ async def get_app():
         app.on_cleanup.append(v2.app_on_cleanup)
         app.add_routes(v2.routes)
 
+    if 'v3' in api_versions:
+        from . import v3
+        app.on_startup.append(v3.app_on_startup)
+        app.on_cleanup.append(v3.app_on_cleanup)
+        app.add_routes(v3.routes)
+
     return app
