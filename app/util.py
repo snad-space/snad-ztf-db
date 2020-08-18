@@ -1,3 +1,5 @@
+import asyncio
+import time
 from collections import namedtuple
 
 from aiohttp.web import HTTPBadRequest, Request
@@ -32,3 +34,18 @@ def ra_dec_radius_from_request(request: Request, max_radius: float) -> RaDecRadi
     if radius <= 0 or radius > max_radius:
         raise HTTPBadRequest(reason=f'"radius" should be positive and less than {max_radius}')
     return RaDecRadius(ra=ra, dec=dec, radius=radius)
+
+
+async def try_for_a_while(f, wait_for, interval=None, exception=Exception):
+    if interval is None:
+        interval = wait_for / 11
+    t_start = time.monotonic()
+    while time.monotonic() - t_start < wait_for:
+        try:
+            if asyncio.iscoroutinefunction(f):
+                return await f()
+            else:
+                return f()
+        except exception as e:
+            await asyncio.sleep(interval)
+    raise RuntimeError(f'Function {f} calls are timed out') from e

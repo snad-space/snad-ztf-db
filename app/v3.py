@@ -1,10 +1,11 @@
 from typing import Iterable, Optional
 
 from aiochclient import ChClient
-from aiohttp import ClientSession
-from aiohttp.web import Application, Response, json_response, RouteTableDef, Request, HTTPInternalServerError, HTTPNotFound
+from aiohttp import ClientSession, ClientConnectorError
+from aiohttp.web import Application, Response, json_response, RouteTableDef, Request, HTTPInternalServerError, \
+    HTTPNotFound
 
-from .util import oids_from_request, ra_dec_radius_from_request
+from .util import oids_from_request, ra_dec_radius_from_request, try_for_a_while
 
 MAX_RADIUS = 60
 
@@ -228,7 +229,18 @@ async def data_dr_circle_full_json(request: Request) -> Response:
 
 async def app_on_startup(app: Application):
     app['ch_http_session'] = ClientSession()
-    app['ch_client'] = ChClient(app['ch_http_session'], url='http://sai.snad.space:8123', database='ztf', user='api')
+
+    async def ch_client():
+        client = ChClient(app['ch_http_session'], url=f'http://sai.snad.space:8123', database='ztf', user='api')
+        await client.fetch('SELECT 1')
+        return client
+
+    app['ch_client'] = await try_for_a_while(
+        ch_client,
+        wait_for=900,
+        interval=1,
+        exception=ClientConnectorError,
+    )
 
 
 async def app_on_cleanup(app: Application):
