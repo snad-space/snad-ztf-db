@@ -228,7 +228,7 @@ async def data_dr_circle_full_json(request: Request) -> Response:
 
 async def app_on_startup(app: Application):
     app['ch_http_session'] = ClientSession()
-    app['ch_client'] = ChClient(app['ch_http_session'], url='http://snad.sai.msu.ru:8123', database='ztf', user='api')
+    app['ch_client'] = ChClient(app['ch_http_session'], url='http://sai.snad.space:8123', database='ztf', user='api')
 
 
 async def app_on_cleanup(app: Application):
