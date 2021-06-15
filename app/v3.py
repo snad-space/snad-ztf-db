@@ -207,6 +207,10 @@ async def data_dr_circle_full_json(request: Request) -> Response:
     dr = request.match_info['dr']
     ra, dec, radius = ra_dec_radius_from_request(request, MAX_RADIUS)
     lcs = await get_lcs_in_circle(request.app['ch_client'], dr, ra, dec, radius)
+
+    if not lcs:
+        return json_response({})
+
     oids = set(obs['oid'] for obs in lcs)
 
     metas = await get_meta_for_oids(request.app['ch_client'], meta_table(dr), oids)
