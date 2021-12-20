@@ -16,9 +16,9 @@ FILTERS = {1: 'zg', 2: 'zr', 3: 'zi'}
 LC_FIELDS = {'mjd', 'mag', 'magerr', 'clrcoeff'}
 
 
-AVAILABLE_DRS = ('dr2', 'dr3', 'dr4', 'latest')
+AVAILABLE_DRS = ('dr2', 'dr3', 'dr4', 'dr8', 'latest')
 SHORT_META_DRS = ('dr2', 'dr3')
-LATEST_DR = 'dr4'
+LATEST_DR = 'dr8'
 AVAILABLE_DRS_HTML = ', '.join(f"<font face='monospace'>{dr}</font>" for dr in AVAILABLE_DRS)
 
 
