@@ -126,7 +126,7 @@ def meta_short_table(dr: str) -> Optional[str]:
 
 
 async def get_meta_for_oids(client: ChClient, table: str, oids: Iterable[int]) -> dict:
-    oids_array = '(' + ', '.join(map(str, oids)) + ')'
+    oids_array = f'({",".join(map(str, oids))})'
     records = await client.fetch(f"""
         SELECT *
         FROM {table}
