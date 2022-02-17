@@ -160,7 +160,7 @@ async def get_lc_for_oid_h3index10(client: ChClient, dr: str, oid: int, h3index1
     records = await client.fetch(f"""
         SELECT *
         FROM {table}
-        WHERE h3index10 = {h3index10:d} AND oid = {oid:d} AND catflags = 0
+        WHERE h3index10 = {h3index10:d} AND oid = {oid:d} AND catflags = 0 AND magerr > 0
         ORDER BY mjd
     """)
     return [dict(r) for r in records]
@@ -196,7 +196,7 @@ async def get_lcs_in_circle(client: ChClient, dr, ra: float, dec: float, radius_
         WHERE h3index10 IN
         (
             SELECT arrayJoin(h3kRing(geoToH3({ra:f}, {dec:f}, 10), toUInt8({radius_deg:f} / h3EdgeAngle(10)) + 1))
-        ) AND greatCircleAngle({ra:f}, {dec:f}, ra, dec) < {radius_deg:f}
+        ) AND greatCircleAngle({ra:f}, {dec:f}, ra, dec) < {radius_deg:f} AND catflags = 0 AND magerr > 0
         ORDER BY h3index10, oid, mjd
     """)
     return [dict(r) for r in records]
