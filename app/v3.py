@@ -130,7 +130,7 @@ async def get_meta_for_oids(client: ChClient, table: str, oids: Iterable[int]) -
     records = await client.fetch(f"""
         SELECT *
         FROM {table}
-        WHERE oid IN {oids_array}
+        WHERE oid IN {oids_array} AND ngoodobs > 0
     """)
     records = (dict(r) for r in records)
     return {r['oid']: r for r in records}
