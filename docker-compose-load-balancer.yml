@@ -1,18 +1,16 @@
 version: '3'
 
 services:
-  db-dev-app:
-    build: app
+  db-app-proxy:
+    build: proxy
     networks:
       - proxy
     environment:
-      VIRTUAL_HOST: db-dev.ztf.snad.space
+      VIRTUAL_HOST: db.ztf.snad.space
       HTTPS_METHOD: noredirect
-      DYNDNS_HOST: db-dev.ztf.snad.space
-      LETSENCRYPT_HOST: db-dev.ztf.snad.space
+      DYNDNS_HOST: db.ztf.snad.space
+      LETSENCRYPT_HOST: db.ztf.snad.space
       LETSENCRYPT_EMAIL: letsencrypt@snad.space
-    volumes:
-      - /var/run/postgresql:/var/run/postgresql
     restart: always
 
 networks:
