@@ -6,6 +6,9 @@ services:
     networks:
       - proxy
     environment:
+      AVAILABLE_DRS: all
+      API_VERSION: all
+      CLICKHOUSE_HOST: sai.snad.space
       VIRTUAL_HOST: sai.db.ztf.snad.space
       HTTPS_METHOD: noredirect
       DYNDNS_HOST: sai.db.ztf.snad.space

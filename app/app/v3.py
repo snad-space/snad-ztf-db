@@ -6,6 +6,7 @@ from aiohttp.web import Application, Response, json_response, RouteTableDef, Req
     HTTPNotFound
 
 from .available_drs import get_avail_drs
+from .clichouse_host import CLICKHOUSE_HOST
 from .util import oids_from_request, ra_dec_radius_from_request, try_for_a_while
 
 MAX_RADIUS = 60
@@ -238,7 +239,7 @@ async def app_on_startup(app: Application):
     app['ch_http_session'] = ClientSession()
 
     async def ch_client():
-        client = ChClient(app['ch_http_session'], url=f'http://sai.snad.space:8123', database='ztf', user='api')
+        client = ChClient(app['ch_http_session'], url=f'http://{CLICKHOUSE_HOST}:8123', database='ztf', user='api')
         await client.fetch('SELECT 1')
         return client
 
