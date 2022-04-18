@@ -6,6 +6,8 @@ services:
     networks:
       - proxy
     environment:
+      API_VERSION: all
+      AVAILABLE_DRS: all
       VIRTUAL_HOST: db-dev.ztf.snad.space
       HTTPS_METHOD: noredirect
       DYNDNS_HOST: db-dev.ztf.snad.space

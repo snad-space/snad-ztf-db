@@ -5,6 +5,7 @@ from aiohttp import ClientSession, ClientConnectorError
 from aiohttp.web import Application, Response, json_response, RouteTableDef, Request, HTTPInternalServerError, \
     HTTPNotFound
 
+from .available_drs import get_avail_drs
 from .util import oids_from_request, ra_dec_radius_from_request, try_for_a_while
 
 MAX_RADIUS = 60
@@ -16,7 +17,9 @@ FILTERS = {1: 'zg', 2: 'zr', 3: 'zi'}
 LC_FIELDS = {'mjd', 'mag', 'magerr', 'clrcoeff'}
 
 
-AVAILABLE_DRS = ('dr2', 'dr3', 'dr4', 'dr8', 'latest')
+SUPPORTED_DRS = ('dr2', 'dr3', 'dr4', 'dr8')
+_ALL_AVAILABLE_DRS = get_avail_drs()
+AVAILABLE_DRS = tuple(dr for dr in SUPPORTED_DRS if dr in _ALL_AVAILABLE_DRS) + ('latest',)
 SHORT_META_DRS = ('dr2', 'dr3')
 LATEST_DR = 'dr8'
 AVAILABLE_DRS_HTML = ', '.join(f"<font face='monospace'>{dr}</font>" for dr in AVAILABLE_DRS)
