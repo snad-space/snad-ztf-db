@@ -6,8 +6,8 @@ services:
     networks:
       - proxy
     environment:
-      API_VERSION: v3
-      AVAILABLE_DRS: "dr3:dr4:dr8"
+      API_VERSION: "v2:v3"
+      AVAILABLE_DRS: all
       CLICKHOUSE_HOST: clickhouse
       VIRTUAL_HOST: uci.db.ztf.snad.space
       HTTPS_METHOD: noredirect
