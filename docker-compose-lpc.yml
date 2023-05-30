@@ -7,16 +7,14 @@ services:
       - proxy
       - clickhouse
     environment:
+      API_VERSION: "v2:v3"
       AVAILABLE_DRS: all
-      API_VERSION: all
       CLICKHOUSE_HOST: clickhouse
-      VIRTUAL_HOST: sai.db.ztf.snad.space
+      VIRTUAL_HOST: lpc.db.ztf.snad.space
       HTTPS_METHOD: noredirect
-      DYNDNS_HOST: sai.db.ztf.snad.space
-      LETSENCRYPT_HOST: sai.db.ztf.snad.space
+      DYNDNS_HOST: lpc.db.ztf.snad.space
+      LETSENCRYPT_HOST: lpc.db.ztf.snad.space
       LETSENCRYPT_EMAIL: letsencrypt@snad.space
-    volumes:
-      - /var/run/postgresql:/var/run/postgresql
     restart: always
 
 networks:
