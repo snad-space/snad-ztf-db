@@ -1,5 +1,3 @@
 aiohttp
 asyncpg
-aiochclient[aiohttp-speedups]
-# https://github.com/maximdanilchenko/aiochclient/issues/89
-sqlparse<0.4.4
+aiochclient[aiohttp-speedups]>=2.3.1
