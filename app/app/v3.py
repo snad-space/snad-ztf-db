@@ -72,6 +72,26 @@ HELP = f'''
             </li>
         </ul>
         <p>Example: <font face='monospace'><a href="/api/v3/data/latest/oid/meta/json?oid=633207400004730">/api/v3/data/latest/oid/meta/json?oid=633207400004730</a></font></p>
+    <h2><font face='monospace'>/api/v3/data/:dr/oid/coord/json</font></h2>
+        <p>Get json with the objects coordinates by their identifiers</p>
+        <p>Path parameters:</p>
+        <ul>
+            <li>
+                <font face='monospace'>:dr</font>
+                &mdash;
+                ZTF data release specifier.
+                Could be one of: {AVAILABLE_DRS_HTML}
+            </li>
+        </ul>
+         <ul>
+            <li>
+                <font face='monospace'>oid</font>
+                &mdash;
+                object identifier (OID).
+                Mandatory, multiple values accepted
+            </li>
+        </ul>
+        <p>Example: <font face='monospace'><a href="/api/v3/data/latest/oid/coord/json?oid=633216300024691&oid=758205100001118">/api/v3/data/latest/oid/coord/json?oid=633216300024691&oid=758205100001118</a></font></p>
     <h2><font face='monospace'>/api/v3/data/:dr/circle/full/json</font></h2>
         <p>Find objects in circle and return json with the whole data</p>
         <p>Path parameters:</p>
@@ -149,6 +169,17 @@ def meta_short_table(dr: str) -> Optional[str]:
     return f'{dr}_meta_short'
 
 
+async def get_coord_for_oids(client: ChClient, table: str, oids: Iterable[int]) -> dict:
+    oids_array = f'({",".join(map(str, oids))})'
+    records = await client.fetch(f"""
+        SELECT oid, ra, dec
+        FROM {table}
+        WHERE oid IN {oids_array} AND ngoodobs > 0
+    """)
+    records = (dict(r) for r in records)
+    return {r['oid']: {k: v for k, v in r.items() if k != 'oid'} for r in records}
+
+
 async def get_meta_for_oids(client: ChClient, table: str, oids: Iterable[int]) -> dict:
     oids_array = f'({",".join(map(str, oids))})'
     records = await client.fetch(f"""
@@ -188,6 +219,14 @@ async def get_lc_for_oid_h3index10(client: ChClient, dr: str, oid: int, h3index1
         ORDER BY mjd
     """)
     return [dict(r) for r in records]
+
+
+@routes.get('/api/v3/data/{dr}/oid/coord/json')
+async def data_dr_oid_coord_json(request: Request) -> Response:
+    dr = request.match_info['dr']
+    oids = oids_from_request(request)
+    coords = await get_coord_for_oids(request.app['ch_client'], meta_table(dr), oids)
+    return json_response(coords)
 
 
 @routes.get('/api/v3/data/{dr}/oid/meta/json')
