@@ -52,6 +52,26 @@ HELP = f'''
             </li>
         </ul>
         <p>Example: <font face='monospace'><a href="/api/v3/data/latest/oid/full/json?oid=830202400008402">/api/v3/data/latest/oid/full/json?oid=830202400008402</a></font></p>
+    <h2><font face='monospace'>/api/v3/data/:dr/oid/meta/json</font></h2>
+        <p>Get json with the objects metadata by their identifiers, the same as previous, but without light-curves and "short" metadata</p>
+        <p>Path parameters:</p>
+        <ul>
+            <li>
+                <font face='monospace'>:dr</font>
+                &mdash;
+                ZTF data release specifier.
+                Could be one of: {AVAILABLE_DRS_HTML}
+            </li>
+        </ul>
+         <ul>
+            <li>
+                <font face='monospace'>oid</font>
+                &mdash;
+                object identifier (OID).
+                Mandatory, multiple values accepted
+            </li>
+        </ul>
+        <p>Example: <font face='monospace'><a href="/api/v3/data/latest/oid/meta/json?oid=633207400004730">/api/v3/data/latest/oid/meta/json?oid=633207400004730</a></font></p>
     <h2><font face='monospace'>/api/v3/data/:dr/circle/full/json</font></h2>
         <p>Find objects in circle and return json with the whole data</p>
         <p>Path parameters:</p>
@@ -168,6 +188,18 @@ async def get_lc_for_oid_h3index10(client: ChClient, dr: str, oid: int, h3index1
         ORDER BY mjd
     """)
     return [dict(r) for r in records]
+
+
+@routes.get('/api/v3/data/{dr}/oid/meta/json')
+async def data_dr_oid_meta_json(request: Request) -> Response:
+    dr = request.match_info['dr']
+    oids = oids_from_request(request)
+    metas = await get_meta_for_oids(request.app['ch_client'], meta_table(dr), oids)
+
+    data = {}
+    for oid, meta in metas.items():
+        data[oid] = prepare_meta(meta, short=None)
+    return json_response(data)
 
 
 @routes.get('/api/v3/data/{dr}/oid/full/json')
