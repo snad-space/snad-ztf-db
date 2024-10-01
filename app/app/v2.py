@@ -100,7 +100,7 @@ async def get_lc_for_oid_h3index10(client: ChClient, oid: int, h3index10: int) -
 
 @routes.get('/api/v2/oid/full/json')
 async def oid_full_json(request: Request) -> Response:
-    oids = oids_from_request(request)
+    oids = await oids_from_request(request)
     metas = await get_meta_for_oids(request.app['ch_client'], oids)
     data = {}
     for meta in metas:

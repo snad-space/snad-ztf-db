@@ -1,6 +1,7 @@
 import asyncio
 import time
 from collections import namedtuple
+from json import JSONDecodeError
 
 from aiohttp.web import HTTPBadRequest, Request
 
@@ -12,10 +13,38 @@ def oid_to_int(oid: str) -> int:
         raise HTTPBadRequest(reason=f'oid value "{oid}" cannot be converted to int')
 
 
-def oids_from_request(request: Request) -> [int]:
+def oids_from_get_request(request: Request) -> [int]:
     oids = request.query.getall('oid', None)
     if oids is None:
         raise HTTPBadRequest(reason='Query string should has at least one "oid" field')
+    return oids
+
+
+async def oids_from_post_request(request: Request) -> [int]:
+    try:
+        data = await request.json()
+    except JSONDecodeError as e:
+        raise HTTPBadRequest(reason='Error during JSON parsing') from e
+    if not isinstance(data, list):
+        raise HTTPBadRequest(reason='JSON should be a list of {"oid": "value"} objects')
+
+    oids = []
+    for record in data:
+        try:
+            oid = record['oid']
+        except KeyError:
+            raise HTTPBadRequest(reason='All objects in JSON should have "oid" field')
+        oids.append(oid)
+    return oids
+
+
+async def oids_from_request(request: Request) -> [int]:
+    if request.method == 'GET':
+        oids = oids_from_get_request(request)
+    elif request.method == 'POST':
+        oids = await oids_from_post_request(request)
+    else:
+        raise HTTPBadRequest(reason='Only GET and POST methods are supported for OID parsing')
     return [oid_to_int(oid) for oid in oids]
 
 

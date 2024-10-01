@@ -178,7 +178,7 @@ async def get_lc_for_oid(con: Connection, oid: int, remove_oid: bool = True) -> 
 
 @routes.get('/api/v1/oid/full/json')
 async def oid_full_json(request: Request) -> Response:
-    oids = oids_from_request(request)
+    oids = await oids_from_request(request)
     data = {}
     for oid in oids:
         async with request.app['pg_pool'].acquire() as con:  # type: Connection

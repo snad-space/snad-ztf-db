@@ -221,10 +221,11 @@ async def get_lc_for_oid_h3index10(client: ChClient, dr: str, oid: int, h3index1
     return [dict(r) for r in records]
 
 
+@routes.post('/api/v3/data/{dr}/oid/coord/json')
 @routes.get('/api/v3/data/{dr}/oid/coord/json')
 async def data_dr_oid_coord_json(request: Request) -> Response:
     dr = request.match_info['dr']
-    oids = oids_from_request(request)
+    oids = await oids_from_request(request)
     coords = await get_coord_for_oids(request.app['ch_client'], meta_table(dr), oids)
     return json_response(coords)
 
@@ -232,7 +233,7 @@ async def data_dr_oid_coord_json(request: Request) -> Response:
 @routes.get('/api/v3/data/{dr}/oid/meta/json')
 async def data_dr_oid_meta_json(request: Request) -> Response:
     dr = request.match_info['dr']
-    oids = oids_from_request(request)
+    oids = await oids_from_request(request)
     metas = await get_meta_for_oids(request.app['ch_client'], meta_table(dr), oids)
 
     data = {}
@@ -244,7 +245,7 @@ async def data_dr_oid_meta_json(request: Request) -> Response:
 @routes.get('/api/v3/data/{dr}/oid/full/json')
 async def data_dr_oid_full_json(request: Request) -> Response:
     dr = request.match_info['dr']
-    oids = oids_from_request(request)
+    oids = await oids_from_request(request)
     metas = await get_meta_for_oids(request.app['ch_client'], meta_table(dr), oids)
 
     if metas_short := meta_short_table(dr):

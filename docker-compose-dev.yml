@@ -5,10 +5,11 @@ services:
     build: app
     networks:
       - proxy
+      - clickhouse
     environment:
-      API_VERSION: all
       AVAILABLE_DRS: all
-      CLICKHOUSE_HOST: sai.snad.space
+      API_VERSION: all
+      CLICKHOUSE_HOST: clickhouse
       VIRTUAL_HOST: db-dev.ztf.snad.space
       HTTPS_METHOD: noredirect
       DYNDNS_HOST: db-dev.ztf.snad.space
@@ -20,5 +21,6 @@ services:
 
 networks:
   proxy:
-    external:
-      name: proxy
+    external: true
+  clickhouse:
+    external: true
