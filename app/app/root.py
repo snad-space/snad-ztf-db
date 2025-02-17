@@ -20,7 +20,7 @@ _template = '''
 _help_links = dict(
     v3='''
         <p>
-            API v3 provides access to ZTF DR2, DR3, DR4, DR8, DR13 & DR17, see details on
+            API v3 provides access to ZTF DR2 and later, see details on
             <a href="/api/v3/help">/api/v3/help</a>.
         </p>
     ''',
