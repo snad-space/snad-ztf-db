@@ -7,8 +7,8 @@ services:
       - proxy
       - clickhouse
     environment:
-      AVAILABLE_DRS: all
       API_VERSION: all
+      AVAILABLE_DRS: "dr2:dr3:dr4:dr8:dr13:dr17"
       CLICKHOUSE_HOST: clickhouse
       VIRTUAL_HOST: sai.db.ztf.snad.space
       HTTPS_METHOD: noredirect
