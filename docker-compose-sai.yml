@@ -8,7 +8,7 @@ services:
       - clickhouse
     environment:
       API_VERSION: all
-      AVAILABLE_DRS: "dr2:dr3:dr4:dr8:dr13:dr17"
+      AVAILABLE_DRS: "dr2:dr3:dr4:dr8:dr13:dr17:dr23"
       CLICKHOUSE_HOST: clickhouse
       VIRTUAL_HOST: sai.db.ztf.snad.space
       HTTPS_METHOD: noredirect
