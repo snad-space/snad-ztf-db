@@ -69,7 +69,7 @@ FROM (
     SELECT
         toUInt64(objectid) AS oid,
         toUInt8(filterid) AS filter,
-        toUInt16(intDiv(oid, 100_000_000_000)) AS fieldid,
+        toUInt16(intDiv(oid, 1_000_000_000_000)) AS fieldid,
         toUInt8(intDiv(oid, 1_000_000_000) % 100) as ccdid,
         toUInt8(intDiv(oid, 100_000_000) % 10) as qid,
         (ccdid-1)*4 + qid-1 AS rcid,
