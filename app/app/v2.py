@@ -121,7 +121,7 @@ async def get_lcs_in_circle(client: ChClient, ra: float, dec: float, radius_arcs
         FROM dr2
         WHERE h3index10 IN
         (
-            SELECT arrayJoin(h3kRing(geoToH3({ra:f}, {dec:f}, 10), toUInt8({radius_deg:f} / h3EdgeAngle(10)) + 1))
+            SELECT arrayJoin(h3kRing(geoToH3({dec:f}, {ra:f}, 10), toUInt8({radius_deg:f} / h3EdgeAngle(10)) + 1))
         ) AND greatCircleAngle({ra:f}, {dec:f}, ra, dec) < {radius_deg:f}
         ORDER BY (oid, mjd)
     """)

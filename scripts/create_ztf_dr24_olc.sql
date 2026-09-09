@@ -7,7 +7,7 @@ CREATE TABLE ztf.dr24_olc
     `ra` Float64 CODEC(Gorilla(8)),
     `dec` Float64 CODEC(Gorilla(8)),
     `nobs_w_bad` UInt16 CODEC(T64, LZ4),
-    `h3index10` UInt64 MATERIALIZED geoToH3(ra, dec, 10) CODEC(Delta(8), LZ4),
+    `h3index10` UInt64 MATERIALIZED geoToH3(dec, ra, 10) CODEC(Delta(8), LZ4),
     `mjd` Array(Float64),
     `mag` Array(Float32),
     `magerr` Array(Float32),
